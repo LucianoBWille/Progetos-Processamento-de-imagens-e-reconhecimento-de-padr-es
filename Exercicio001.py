@@ -1,14 +1,7 @@
 import numpy as np
 import cv2
-from matplotlib import pyplot as plt
-
-def conversor(img, metodo):
-    convercao = eval('cv2.COLOR_RGB2' + metodo)
-    convertido = cv2.cvtColor(img, convercao)
-    nome = f'{nome} {metodo}'
-    cv2.imshow(nome, convertido)
-    splitter(convertido, nome)
-    del convertido, convercao
+#from matplotlib import pyplot as plt
+import os
 
 def splitter(img, name):
     ch1, ch2, ch3 = cv2.split(img)
@@ -46,6 +39,7 @@ while op != 0:
     image = cv2.imread(nomeArq + '.jpg')
     nome = nome.capitalize()
     cv2.imshow(nome, image)
+    os.system('clear')
     if op == 1:  # HSV
         hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
         nome = nome + ' HSV'
@@ -71,8 +65,18 @@ while op != 0:
         splitter(xyz, nome)
         del xyz
     elif op == 5:  # YUV
-        metodo = 'YUV'
-        conversor(image, metodo)
+        yuv = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+        nome = nome + ' YUV'
+        cv2.imshow(nome, yuv)
+        splitter(yuv, nome)
+        del yuv
     elif op == 6:  # YCrCb
-        metodo = 'YCrCb'
-        conversor(image, metodo)
+        YCrCb = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+        nome = nome + ' YCrCb'
+        cv2.imshow(nome, YCrCb)
+        splitter(YCrCb, nome)
+        del YCrCb
+    else:
+        print('Opção Inválida')
+        cv2.destroyAllWindows()
+        
