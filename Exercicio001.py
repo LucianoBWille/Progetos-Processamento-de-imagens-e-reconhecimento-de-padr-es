@@ -3,10 +3,10 @@ from __future__ import division
 import argparse
 import numpy as np
 import cv2
-#from matplotlib import pyplot as plt
 import os
 
-def splitter(img, name):
+
+def splitter(img, name):  # divide a imagem nos tres canais e salva cada um deles (além da repassada)
     ch1, ch2, ch3 = cv2.split(img)
     title = name + '-Channel 1'
     cv2.imshow(title, ch1)
@@ -21,51 +21,56 @@ def splitter(img, name):
     cv2.imwrite('imagens//' + name + '-Channel 3.jpg', ch3)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-def histogramer(src, name):
-    bgr_planes = cv2.split(src)
+
+
+def histogramer(src, name):  # Gera uma imagem com os histogramas dos tres canais combinados
+    bgr_planes = cv2.split(src)  # divide a imagem nos tres canais de cor
     histSize = 256
     histRange = (0, 256)  # the upper boundary is exclusive
     accumulate = False
-    b_hist = cv2.calcHist(bgr_planes, [0], None, [histSize], histRange, accumulate=accumulate)
-    g_hist = cv2.calcHist(bgr_planes, [1], None, [histSize], histRange, accumulate=accumulate)
-    r_hist = cv2.calcHist(bgr_planes, [2], None, [histSize], histRange, accumulate=accumulate)
+    b_hist = cv2.calcHist(bgr_planes, [0], None, [histSize], histRange, accumulate=accumulate)  # Calcula o histograma do canal 1
+    g_hist = cv2.calcHist(bgr_planes, [1], None, [histSize], histRange, accumulate=accumulate)  # Calcula o histograma do canal 2
+    r_hist = cv2.calcHist(bgr_planes, [2], None, [histSize], histRange, accumulate=accumulate)  # Calcula o histograma do canal 3
     hist_w = 256
     hist_h = 256
     bin_w = int(round(hist_w / histSize))
-    maior = max([max(b_hist), max(g_hist), max(r_hist)])
-    histImage = np.zeros((hist_h, hist_w, 3), dtype=np.uint8)
+    maior = max([max(b_hist), max(g_hist), max(r_hist)])  # Encontra o valor da maior aparição de cor
+    histImage = np.zeros((hist_h, hist_w, 3), dtype=np.uint8)  # cria uma imagem preta onde o histograma será desenhado
 
     for i in range(1, histSize):
-        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (b_hist[i - 1]))
-        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (b_hist[i]))
-        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (255, 0, 0), thickness=bin_w)
-        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (g_hist[i - 1]))
-        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (g_hist[i]))
-        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (0, 255, 0), thickness=bin_w)
-        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (r_hist[i - 1]))
-        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (r_hist[i]))
-        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (0, 0, 255), thickness=bin_w)
+        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (b_hist[i - 1]))  # y1 e y2 são a quantidade de pixeis de certa
+        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (b_hist[i]))      # cor ajustada a altura do histograma
+        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (255, 0, 0), thickness=bin_w)  # gera a linha Azul do Histograma
+        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (g_hist[i - 1]))  # y1 e y2 são a quantidade de pixeis de certa
+        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (g_hist[i]))      # cor ajustada a altura do histograma
+        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (0, 255, 0), thickness=bin_w)  # gera a linha Verde do Histograma
+        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (r_hist[i - 1]))  # y1 e y2 são a quantidade de pixeis de certa
+        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (r_hist[i]))      # cor ajustada a altura do histograma
+        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (0, 0, 255), thickness=bin_w)  # gera a linha Vermelha do Histograma
     cv2.imshow(name + '-Histograma', histImage)
     cv2.imwrite('imagens//' + name + '-Histograma.jpg', histImage)
+
+
 def histogramer1channel(src, name):
     histSize = 256
     histRange = (0, 256)  # the upper boundary is exclusive
     accumulate = False
-    hist = cv2.calcHist(src, [0], None, [histSize], histRange, accumulate=accumulate)
+    hist = cv2.calcHist(src, [0], None, [histSize], histRange, accumulate=accumulate)  # Calcula o histograma
     hist_w = 256
     hist_h = 256
     bin_w = int(round(hist_w / histSize))
-    maior = max(hist)
-    histImage = np.zeros((hist_h, hist_w, 3), dtype=np.uint8)
+    maior = max(hist)  # Encontra o valor da maior aparição de cor
+    histImage = np.zeros((hist_h, hist_w, 3), dtype=np.uint8)  # cria uma imagem preta onde o histograma será desenhado
 
     for i in range(1, histSize):
-        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (hist[i - 1]))
-        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (hist[i]))
-        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (255, 255, 255), thickness=bin_w)
+        y1 = hist_h - 1 - int(((hist_h - 2) / maior) * (hist[i - 1]))  # y1 e y2 são a quantidade de pixeis de certa
+        y2 = hist_h - 1 - int(((hist_h - 2) / maior) * (hist[i]))      # cor ajustada a altura do histograma
+        cv2.line(histImage, (bin_w * (i - 1), y1), (bin_w * (i), y2), (255, 255, 255), thickness=bin_w)  # gera a linha do Histograma
     cv2.imshow(name + '-Histograma', histImage)
     cv2.imwrite('imagens//' + name + '-Histograma.jpg', histImage)
+
+
 op = 1
-initFlag = True
 while op != 0:
     op = int(input('''     =================
      | 0 - Sair       |
@@ -77,6 +82,7 @@ while op != 0:
      | 6 - YCrCb      |
      | 7 - YUV        |
      | 8 - GRAY       |
+     | 9 - ORIGINAL   |
      =================
      Opção: '''))
     if op == 0:
@@ -147,6 +153,8 @@ while op != 0:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
         del gray
+    elif op == 9:
+        splitter(image, nome)
     else:
         print('Opção Inválida')
         cv2.destroyAllWindows()
