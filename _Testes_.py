@@ -36,6 +36,7 @@ parser = argparse.ArgumentParser(description='Code for Histogram Calculation tut
 parser.add_argument('--input', help='Path to input image.', default='lena.jpg')
 args = parser.parse_args()
 '''
+'''
 #src = cv.imread(cv.samples.findFile(args.input))
 src = original.imagem
 if src is None:
@@ -74,4 +75,105 @@ image = cv.merge((b_hist, g_hist, r_hist))
 cv.imshow('Merged', image)
 cv.waitKey(0)
 cv.destroyAllWindows()
+'''
+'''
+import cv2 as cv
+import numpy as np
 
+class Botao():
+    def __init__(self, cor, x1, x2, y1, y2):
+        self.cor = cor
+        self.x1 = x1
+        self.x2 = x2
+        self.y1 = y1
+        self.y2 = y2
+altura = 150
+largura = 400
+canvas = np.ones((altura, largura, 3))
+bordaV = 20
+bordaH = 10
+b1 = Botao((0, 0, 1), bordaH, int(largura/2)-bordaH, bordaV, altura-bordaV)
+b2 = Botao((1, 0, 0), int(largura/2)+bordaH, largura-bordaH, bordaV, altura-bordaV)
+grossura = 3
+cv.rectangle(canvas, (b1.x1, b1.y1), (b1.x2, b1.y2), (0.8, 0.8, 0.8), -1)
+cv.rectangle(canvas, (b2.x1, b2.y1), (b2.x2, b2.y2), (0.8, 0.8, 0.8), -1)
+cv.rectangle(canvas, (b1.x1, b1.y1), (b1.x2, b1.y2), b1.cor, grossura)
+cv.rectangle(canvas, (b2.x1, b2.y1), (b2.x2, b2.y2), b2.cor, grossura)
+fonte = cv.FONT_HERSHEY_SIMPLEX
+escala = 1
+grossura = 3
+cv.putText(canvas, 'Video', (b1.x1+50, b1.y1+65), fonte, escala, b1.cor, grossura)
+cv.putText(canvas, 'Camera', (b2.x1+30, b2.y1+65), fonte, escala, b2.cor, grossura)
+cv.imshow("Canvas", canvas)
+cv.waitKey(0)
+'''
+
+cap = cv.VideoCapture(0)
+
+fundo = cv.imread('Captura.jpg')
+altura = 640
+largura = 480
+base = fundo
+cv.rectangle(base, (0, 0), (640, 480), (250, 250, 250), -1)
+
+
+def compara(cor1, cor2):
+    tolerancia = 100
+    if cor2[0]-tolerancia < cor1[0] < cor2[0]+tolerancia and \
+            cor2[1]-tolerancia < cor1[1] < cor2[1]+tolerancia and \
+            cor2[2]-tolerancia < cor1[2] < cor2[2]+tolerancia:
+        return [0, 255, 0]
+    else:
+        return [cor1[0], cor1[1], cor1[2]]
+while(cap.isOpened()):
+    ret, frame = cap.read()
+
+    b, g, r = cv.split(frame)
+    B, G, R = cv.split(fundo)
+    ret, thresh1 = cv.threshold(b, 127, 255, cv.THRESH_TRUNC)
+    ret, thresh2 = cv.threshold(g, 127, 255, cv.THRESH_TRUNC)
+    ret, thresh3 = cv.threshold(r, 127, 255, cv.THRESH_TRUNC)
+    ret, thresh4 = cv.threshold(B, 127, 255, cv.THRESH_TRUNC)
+    ret, thresh5 = cv.threshold(G, 127, 255, cv.THRESH_TRUNC)
+    ret, thresh6 = cv.threshold(R, 127, 255, cv.THRESH_TRUNC)
+
+    ch1 = cv.bitwise_and(thresh1, thresh4)
+    ch2 = cv.bitwise_and(thresh2, thresh5)
+    ch3 = cv.bitwise_and(thresh3, thresh6)
+
+    ch11 = cv.bitwise_not(ch1)
+    mascara1 = cv.subtract(ch11, ch1)
+
+    ch21 = cv.bitwise_not(ch2)
+    mascara2 = cv.subtract(ch21, ch2)
+
+    ch31 = cv.bitwise_not(ch3)
+    mascara3 = cv.subtract(ch31, ch3)
+
+    mascara = cv.add(mascara1, mascara2)
+    mascara = cv.add(mascara, mascara3)
+    for i in range(0, 10):
+        mascara = cv.add(mascara, mascara1)
+        mascara = cv.add(mascara, mascara2)
+        mascara = cv.add(mascara, mascara3)
+
+    ret, mascara = cv.threshold(mascara, 127, 255, cv.THRESH_BINARY)
+
+    mascara = cv.bitwise_not(mascara)
+
+    ch1 = cv.subtract(b, mascara)
+    ch2 = cv.add(g, mascara)
+    ch3 = cv.subtract(r, mascara)
+
+    transformada = cv.merge((ch1, ch2, ch3))
+
+    cv.imshow('frame', frame)
+    key = cv.waitKey(1)
+    if key & 0xFF == ord('q'):
+        break
+    elif key & 0xFF == ord('p'):
+        fundo = frame
+        cv.imwrite('Captura.jpg', fundo)
+
+cap.release()
+cv.destroyAllWindows()
